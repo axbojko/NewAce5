@@ -1,0 +1,128 @@
+interface ethernet 1
+  channel-group 1000 mode active
+interface ethernet 4
+  channel-group 10 mode active
+interface port-channel 10
+  switchport mode trunk
+  mlag 10
+interface port-channel 1000
+  switchport mode trunk
+  switchport trunk group MLAG-Peer 
+  mtu 9214
+vlan 4094
+  trunk group MLAG-Peer
+interface vlan 4094
+  no autostate
+  ip address {{ underlay[inventory_hostname]['interfaces']['Vlan4094']['ipv4']}}/{{ underlay[inventory_hostname]['interfaces']['Vlan4094']['mask']}}
+no spanning-tree vlan-id 4094
+mlag configuration
+  domain-id MLAG
+  local-interface Vlan4094
+  peer-link port-channel 1000
+  peer-address {{ underlay[inventory_hostname]['MLAG']['mlag-peer']}}
+{% for item in underlay[inventory_hostname]['interfaces'] %}
+interface {{ item }}
+  ip address {{ underlay[inventory_hostname]['interfaces'][item]['ipv4']}}/{{ underlay[inventory_hostname]['interfaces'][item]['mask']}}
+{% if 'Ethernet' in item %}
+  no switchport
+  mtu 9214
+{% endif %}
+{% endfor %}
+ip prefix-list LOOPBACK
+  permit 192.168.101.0/24 eq 32
+route-map LOOPBACK permit 10
+  match ip address prefix-list LOOPBACK
+
+
+ip virtual-router mac-address 001c.7300.0099
+{% for item in underlay[inventory_hostname]['TENANTS'] %}
+vrf instance {{ item }}
+ip routing vrf {{ item }}
+{% endfor %}
+{% for Tenant in underlay[inventory_hostname]['TENANTS'] %}
+vlan {{underlay[inventory_hostname]['TENANTS'][Tenant]['VLAN']}} 
+{% endfor %}
+{% for Tenant in underlay[inventory_hostname]['TENANTS'] %}
+interface vlan {{underlay[inventory_hostname]['TENANTS'][Tenant]['VLAN']}}
+    vrf {{underlay[inventory_hostname]['TENANTS'][Tenant]['VRF']}}
+    ip address virtual  {{underlay[inventory_hostname]['TENANTS'][Tenant]['SVI']}}
+    no autostate
+{% endfor %}
+interface vxlan 1
+  vxlan source-interface loopback 1
+  vxlan udp-port 4789
+{% for Tenant in underlay[inventory_hostname]['TENANTS'] %}
+  vxlan vlan {{underlay[inventory_hostname]['TENANTS'][Tenant]['VLAN']}} vni {{underlay[inventory_hostname]['TENANTS'][Tenant]['L2VNI']}}
+{% endfor %}
+{% for Tenant in underlay[inventory_hostname]['TENANTS'] %}
+  vxlan vrf {{underlay[inventory_hostname]['TENANTS'][Tenant]['VRF']}} vni {{underlay[inventory_hostname]['TENANTS'][Tenant]['L3VNI']}}
+{% endfor %} 
+
+
+
+router bgp {{ underlay[inventory_hostname]['BGP']['ASN'] }}
+  router-id {{ underlay[inventory_hostname]['interfaces']['loopback0']['ipv4']}}
+{% for peer in underlay[inventory_hostname]['BGP']['spine-peers'] %}
+  neighbor {{ peer }} peer group SPINE_Underlay
+{% endfor %}
+{% for peer in underlay[inventory_hostname]['BGP']['ibgp-peer'] %}
+  neighbor {{ peer }} peer group LEAF_Peer
+  neighbor LEAF_Peer remote-as {{ underlay[inventory_hostname]['BGP']['ASN']}}
+{% endfor %}
+{% if underlay[inventory_hostname]['BGP']['spine-ASN'] == 65100: %}
+{% for peer in underlay['global']['DC1']['spine_evpn_peers'] %}
+  neighbor {{ peer }} peer group EVPN
+{% endfor %}
+{% else %}
+{% for peer in underlay['global']['DC2']['spine_evpn_peers'] %}
+  neighbor {{ peer }} peer group EVPN
+{% endfor %}
+{% endif %}
+  no bgp default ipv4-unicast
+  maximum-paths 3
+  distance bgp 20 200 200
+  neighbor SPINE_Underlay peer group
+  neighbor SPINE_Underlay remote-as {{ underlay[inventory_hostname]['BGP']['spine-ASN'] }}
+  neighbor SPINE_Underlay send-community
+  neighbor SPINE_Underlay maximum-routes 12000
+  neighbor LEAF_Peer peer group 
+  neighbor LEAF_Peer next-hop-self
+  neighbor LEAF_Peer maximum-routes 12000
+  neighbor EVPN peer group 
+  neighbor EVPN update-source loopback0
+  neighbor EVPN ebgp-multihop 3
+  neighbor EVPN send-community
+  neighbor EVPN maximum-routes 0
+  neighbor EVPN remote-as {{underlay[inventory_hostname]['BGP']['spine-ASN']}}
+  redistribute connected route-map LOOPBACK
+  address-family ipv4
+    neighbor SPINE_Underlay activate
+    neighbor LEAF_Peer activate
+    redistribute connected
+    exit
+  address-family evpn
+    bgp next-hop-unchanged
+    neighbor EVPN activate
+    exit
+
+{% for item in underlay[inventory_hostname]['TENANTS'] %}
+    vlan {{ underlay[inventory_hostname]['TENANTS'][item]['VLAN']}}
+        rd {{ underlay[inventory_hostname]['interfaces']['loopback0']['ipv4']}}:{{ underlay[inventory_hostname]['TENANTS'][item]['VLAN']}}
+        route-target both {{ underlay[inventory_hostname]['TENANTS'][item]['VLAN']}}:{{ underlay[inventory_hostname]['TENANTS'][item]['VLAN']}}
+        redistribute learned
+        exit
+{% endfor %}
+{% for item in underlay[inventory_hostname]['TENANTS'] %}
+    vrf {{ underlay[inventory_hostname]['TENANTS'][item]['VRF']}}
+        rd {{ underlay[inventory_hostname]['interfaces']['loopback0']['ipv4']}}:{{ underlay[inventory_hostname]['TENANTS'][item]['L3VNI']}}
+        route-target import evpn {{ underlay[inventory_hostname]['TENANTS'][item]['L3VNI']}}:{{ underlay[inventory_hostname]['TENANTS'][item]['L3VNI']}}
+        route-target export evpn {{ underlay[inventory_hostname]['TENANTS'][item]['L3VNI']}}:{{ underlay[inventory_hostname]['TENANTS'][item]['L3VNI']}}
+        redistribute connected
+        exit
+{% endfor %}
+
+
+
+
+
+

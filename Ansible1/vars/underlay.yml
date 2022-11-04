@@ -1,0 +1,616 @@
+global:
+  DC1:
+    spine_ASN: 65100
+    p2p: "192.168.103.0/24"
+    lo0: "192.168.101.0/24"
+    spine_evpn_peers:
+      - 192.168.101.101
+      - 192.168.101.102
+    
+  DC2:
+    spine_ASN: 65200
+    p2p: "192.168.203.0/24"
+    lo0: "192.168.201.0/24"
+    spine_evpn_peers:
+      - 192.168.201.101
+      - 192.168.201.102
+s1-spine1:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.101
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.1
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.7
+      mask: 31
+    Ethernet4:
+      ipv4: 192.168.103.13
+      mask: 31
+    Ethernet5:
+      ipv4: 192.168.103.19
+      mask: 31
+    Ethernet7:
+      ipv4: 192.168.103.25
+      mask: 31
+    Ethernet8:
+      ipv4: 192.168.103.31
+      mask: 31
+  BGP:
+    ASN: 65100
+    leaf-peers:
+      - 192.168.103.0
+      - 192.168.103.6
+      - 192.168.103.12
+      - 192.168.103.18
+    borderleaf-peers:
+      - 192.168.103.24
+      - 192.168.103.30
+s1-spine2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.102
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.3
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.9
+      mask: 31
+    Ethernet4:
+      ipv4: 192.168.103.15
+      mask: 31
+    Ethernet5:
+      ipv4: 192.168.103.21
+      mask: 31
+    Ethernet7:
+      ipv4: 192.168.103.27
+      mask: 31
+    Ethernet8:
+      ipv4: 192.168.103.33
+      mask: 31
+  BGP:
+    ASN: 65100
+    leaf-peers:
+      - 192.168.103.2
+      - 192.168.103.8
+      - 192.168.103.14
+      - 192.168.103.20
+    borderleaf-peers:
+      - 192.168.103.26
+      - 192.168.103.32
+s1-leaf1:
+  interfaces:
+    loopback0: 
+      ipv4: 192.168.101.11
+      mask: 32
+    loopback1: 
+      ipv4: 192.168.102.11
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.0
+      mask: 31
+    Ethernet3: 
+      ipv4: 192.168.103.2
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.1
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  TENANTS:
+    Red:
+      VRF: Red
+      L3VNI: 1111
+      L2VNI: 1010
+      VLAN: 10
+      SVI: 10.0.0.254/24
+    Blue:
+      VRF: Blue
+      L3VNI: 2222
+      L2VNI: 2020
+      VLAN: 20
+      SVI: 20.0.0.254/24 
+  MLAG:
+    mlag-peer: 192.168.255.2
+  BGP:
+    ASN: 65101
+    spine-ASN: 65100
+    spine-peers:
+      - 192.168.103.1
+      - 192.168.103.3
+    ibgp-peer:
+      - 169.169.169.2
+s1-leaf2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.12
+      mask: 32
+    loopback1:
+      ipv4: 192.168.102.11
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.6
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.8
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.2
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  TENANTS:
+    Red:
+      VRF: Red
+      L3VNI: 1111
+      L2VNI: 1010
+      VLAN: 10
+      SVI: 10.0.0.254/24
+    Blue:
+      VRF: Blue
+      L3VNI: 2222
+      L2VNI: 2020
+      VLAN: 20
+      SVI: 20.0.0.254/24 
+  MLAG:
+    mlag-peer: 192.168.255.1
+  BGP:
+    ASN: 65101
+    spine-ASN: 65100
+    spine-peers:
+      - 192.168.103.7
+      - 192.168.103.9
+    ibgp-peer:
+      - 169.169.169.1
+s1-leaf3:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.13
+      mask: 32
+    loopback1:
+      ipv4: 192.168.102.13
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.12
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.14
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.5
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  TENANTS:
+    Green:
+      VRF: Green
+      L3VNI: 1111
+      L2VNI: 3030
+      VLAN: 30
+      SVI: 30.0.0.254/24
+    Orange:
+      VRF: Orange
+      L3VNI: 2222
+      L2VNI: 4040
+      VLAN: 40
+      SVI: 40.0.0.254/24  
+  MLAG:
+    mlag-peer: 192.168.255.2
+  BGP:
+    ASN: 65102
+    spine-ASN: 65100
+    spine-peers:
+      - 192.168.103.13
+      - 192.168.103.15
+    ibgp-peer:
+      - 169.169.169.6
+s1-leaf4:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.14
+      mask: 32
+    loopback1:
+      ipv4: 192.168.102.13
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.18
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.20
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.6
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  TENANTS:
+    Green:
+      VRF: Green
+      L3VNI: 1111
+      L2VNI: 3030
+      VLAN: 30
+      SVI: 30.0.0.254/24
+    Orange:
+      VRF: Orange
+      L3VNI: 2222
+      L2VNI: 4040
+      VLAN: 40
+      SVI: 40.0.0.254/24  
+  MLAG:
+    mlag-peer: 192.168.255.1 
+  BGP:
+    ASN: 65102
+    spine-ASN: 65100
+    spine-peers:
+      - 192.168.103.19
+      - 192.168.103.21
+    ibgp-peer:
+      - 169.169.169.5
+s1-brdr1:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.101.21
+      mask: 32
+    loopback1:
+      ipv4: 192.168.102.21
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.24
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.26
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.9
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  MLAG:
+    mlag-peer: 192.168.255.2 
+  BGP:
+    ASN: 65103
+    spine-peers:
+      - 192.168.103.25
+      - 192.168.103.27
+    dci-peer:
+      - 192.168.254.1
+    ibgp-peer:
+      - 169.169.169.10
+s1-brdr2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.102.22
+      mask: 32
+    loopback1:
+      ipv4: 192.168.102.21
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.103.30
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.103.32
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.10
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  MLAG:
+    mlag-peer: 192.168.255.1 
+  BGP:
+    ASN: 65103
+    spine-peers:
+      - 192.168.103.31
+      - 192.168.103.33
+    dci-peer:
+      - 192.168.254.3
+    ibgp-peer:
+      - 169.169.169.9
+s2-spine1:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.101
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.1
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.7
+      mask: 31
+    Ethernet4:
+      ipv4: 192.168.203.13
+      mask: 31
+    Ethernet5:
+      ipv4: 192.168.203.19
+      mask: 31
+    Ethernet7:
+      ipv4: 192.168.203.25
+      mask: 31
+    Ethernet8:
+      ipv4: 192.168.203.31
+      mask: 31
+  BGP:
+    ASN: 65200
+    leaf-peers:
+      - 192.168.203.0
+      - 192.168.203.6
+      - 192.168.203.12
+      - 192.168.203.18
+    borderleaf-peers:
+      - 192.168.203.24
+      - 192.168.203.30
+s2-spine2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.102
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.3
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.9
+      mask: 31
+    Ethernet4:
+      ipv4: 192.168.203.15
+      mask: 31
+    Ethernet5:
+      ipv4: 192.168.203.21
+      mask: 31
+    Ethernet7:
+      ipv4: 192.168.203.27
+      mask: 31
+    Ethernet8:
+      ipv4: 192.168.203.33
+      mask: 31
+  BGP:
+    ASN: 65200
+    leaf-peers:
+      - 192.168.203.2
+      - 192.168.203.8
+      - 192.168.203.14
+      - 192.168.203.20
+    borderleaf-peers:
+      - 192.168.203.26
+      - 192.168.203.32
+s2-leaf1:
+  interfaces:
+    loopback0: 
+      ipv4: 192.168.201.11
+      mask: 32
+    loopback1: 
+      ipv4: 192.168.202.11
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.0
+      mask: 31
+    Ethernet3: 
+      ipv4: 192.168.203.2
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.13
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  TENANTS:
+    Pink:
+      VRF: Pink
+      L3VNI: 5555
+      L2VNI: 5050
+      VLAN: 50
+      SVI: 50.0.0.254/24
+    White:
+      VRF: White
+      L3VNI: 6666
+      L2VNI: 6060
+      VLAN: 60
+      SVI: 60.0.0.254/24 
+  MLAG:
+    mlag-peer: 192.168.255.2
+  BGP:
+    ASN: 65201
+    spine-ASN: 65200
+    spine-peers:
+      - 192.168.203.1
+      - 192.168.203.3
+    ibgp-peer:
+      - 169.169.169.14
+s2-leaf2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.12
+      mask: 32
+    loopback1:
+      ipv4: 192.168.202.11
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.6
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.8
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.14
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  TENANTS:
+    Pink:
+      VRF: Pink
+      L3VNI: 5555
+      L2VNI: 5050
+      VLAN: 50
+      SVI: 50.0.0.254/24
+    White:
+      VRF: White
+      L3VNI: 6666
+      L2VNI: 6060
+      VLAN: 60
+      SVI: 60.0.0.254/24
+  MLAG:
+    mlag-peer: 192.168.255.1
+  BGP:
+    ASN: 65201
+    spine-ASN: 65200
+    spine-peers:
+      - 192.168.203.7
+      - 192.168.203.9
+    ibgp-peer:
+      - 169.169.169.13
+s2-leaf3:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.13
+      mask: 32
+    loopback1:
+      ipv4: 192.168.202.13
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.12
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.14
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.17
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  TENANTS:
+    Purple:
+      VRF: Purple
+      L3VNI: 5555
+      L2VNI: 7070
+      VLAN: 70
+      SVI: 70.0.0.254/24
+    Black:
+      VRF: Black
+      L3VNI: 6666
+      L2VNI: 8080
+      VLAN: 80
+      SVI: 80.0.0.254/24   
+  MLAG:
+    mlag-peer: 192.168.255.2
+  BGP:
+    ASN: 65202
+    spine-ASN: 65200
+    spine-peers:
+      - 192.168.203.13
+      - 192.168.203.15
+    ibgp-peer:
+      - 169.169.169.18
+s2-leaf4:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.14
+      mask: 32
+    loopback1:
+      ipv4: 192.168.202.13
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.18
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.20
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.18
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  TENANTS:
+    Purple:
+      VRF: Purple
+      L3VNI: 5555
+      L2VNI: 7070
+      VLAN: 70
+      SVI: 70.0.0.254/24
+    Black:
+      VRF: Black
+      L3VNI: 6666
+      L2VNI: 8080
+      VLAN: 80
+      SVI: 80.0.0.254/24  
+  MLAG:
+    mlag-peer: 192.168.255.1 
+  BGP:
+    ASN: 65202
+    spine-ASN: 65200
+    spine-peers:
+      - 192.168.203.19
+      - 192.168.203.21
+    ibgp-peer:
+      - 169.169.169.17
+s2-brdr1:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.201.21
+      mask: 32
+    loopback1:
+      ipv4: 192.168.202.21
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.24
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.26
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.21
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.1
+      mask: 30
+  MLAG:
+    mlag-peer: 192.168.255.2 
+  BGP:
+    ASN: 65203
+    spine-peers:
+      - 192.168.203.25
+      - 192.168.203.27
+    dci-peer:
+      - 192.168.254.1
+    ibgp-peer:
+      - 169.169.169.22
+s2-brdr2:
+  interfaces:
+    loopback0:
+      ipv4: 192.168.202.22
+      mask: 32
+    loopback1:
+      ipv4: 192.168.202.21
+      mask: 32
+    Ethernet2:
+      ipv4: 192.168.203.30
+      mask: 31
+    Ethernet3:
+      ipv4: 192.168.203.32
+      mask: 31
+    Ethernet6:
+      ipv4: 169.169.169.22
+      mask: 30
+    Vlan4094:
+      ipv4: 192.168.255.2
+      mask: 30
+  MLAG:
+    mlag-peer: 192.168.255.1 
+  BGP:
+    ASN: 65203
+    spine-peers:
+      - 192.168.203.31
+      - 192.168.203.33
+    dci-peer:
+      - 192.168.254.3
+    ibgp-peer:
+      - 169.169.169.21

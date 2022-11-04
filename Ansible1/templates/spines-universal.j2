@@ -1,0 +1,51 @@
+{% for item in underlay[inventory_hostname]['interfaces'] %}
+interface {{ item }}
+  ip address {{ underlay[inventory_hostname]['interfaces'][item]['ipv4']}}/{{ underlay[inventory_hostname]['interfaces'][item]['mask']}}
+{% if 'Ethernet' in item %}
+  no switchport
+  mtu 9214
+{% endif %}
+{% endfor %}
+ip prefix-list LOOPBACK
+{% if underlay[inventory_hostname]['BGP']['ASN'] == 65100 %}
+  permit 192.168.101.0/24 eq 32
+{% else %}
+  permit 192.168.201.0/24 eq 32
+{% endif %}
+route-map LOOPBACK permit 10
+  match ip address prefix-list LOOPBACK
+peer-filter LEAF-AS-RANGE
+  10 match as-range 65000-65535 result accept
+peer-filter LEAF-EVPN-AS-RANGE
+  10 match as-range 65000-65535 result accept
+router bgp {{ underlay[inventory_hostname]['BGP']['ASN']}}
+  router-id {{ underlay[inventory_hostname]['interfaces']['loopback0']['ipv4']}}
+{% for peer in underlay[inventory_hostname]['BGP']['leaf-peers'] %}
+  neighbor {{ peer }} peer group LEAF_Underlay
+{% endfor %}
+  no bgp default ipv4-unicast
+{% if underlay[inventory_hostname]['BGP']['ASN'] == 65100 %}
+  bgp listen range 192.168.103.0/24 peer-group LEAF_Underlay peer-filter LEAF-AS-RANGE
+  bgp listen range 192.168.101.0/24 peer-group EVPN peer-filter LEAF-EVPN-AS-RANGE
+{% else %}
+  bgp listen range 192.168.203.0/24 peer-group LEAF_Underlay peer-filter LEAF-AS-RANGE
+  bgp listen range 192.168.201.0/24 peer-group EVPN peer-filter LEAF-EVPN-AS-RANGE
+{% endif %}
+  maximum-paths 3
+  distance bgp 20 200 200
+  neighbor LEAF_Underlay peer group
+  neighbor LEAF_Underlay maximum-routes 12000
+  neighbor LEAF_Underlay send-community
+  neighbor EVPN peer group
+  neighbor EVPN ebgp-multihop 3
+  neighbor EVPN send-community
+  neighbor EVPN maximum-routes 0
+  neighbor EVPN update-source loopback0
+  neighbor EVPN next-hop-unchanged
+  
+  redistribute connected route-map LOOPBACK
+  address-family ipv4
+    neighbor LEAF_Underlay activate
+    redistribute connected 
+  address-family evpn
+    neighbor EVPN activate

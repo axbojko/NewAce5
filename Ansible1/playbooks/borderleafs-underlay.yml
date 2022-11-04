@@ -1,0 +1,18 @@
+---
+- hosts: s1-brdr1, s1-brdr2
+  gather_facts: no
+  tasks:
+  - name: Register variables
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Test variables
+    debug:
+      msg: "{{ underlay[inventory_hostname]['interfaces']['Ethernet3']['ipv4'] }}"
+  - name: Create a configuration for Ethernet3
+    template:
+      src: "{{lookup('env','PWD')}}/templates/borderleafs-underlay.j2"
+      dest: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}_underlay.cfg"
+  - name: Upload config
+    eos_config:
+      src: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}_underlay.cfg"
